@@ -1,5 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain <qcs@gmail.com>         *
+ *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *                                         <M.Sawerwain@gmail.com>         *
+ *   Copyright (C) 2005 -- 2006 by Kamil Paw³owski                         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
@@ -19,8 +21,6 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
-/* This header file contains declarations of complex procedures */
 
 #ifndef __qcs_complex_h__
 #define __qcs_complex_h__
