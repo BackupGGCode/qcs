@@ -548,6 +548,19 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix *qcs_get_column_from_matrix(tf_qcs_matrix *
     return m;
 }
 
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *qcs_get_row_from_matrix(tf_qcs_matrix *a_in, int r)
+{
+    int i;
+    tf_qcs_matrix *m = qcs_create_matrix(1, a_in->cols);
+
+    for(i=0; i<a_in->cols; i++)
+    {
+        qcs_set_cell_at_matrix_complex(m, 0, i, qcs_get_cell_at_matrix_complex(a_in, r, i));
+    }
+
+    return m;
+}
+
 DYNAMIC_LIB_DECORATION void qcs_get_column_from_matrix_into_vector(tf_qcs_matrix *a_in, int c, tf_qcs_matrix *vec_out)
 {
     int i;
@@ -1353,7 +1366,7 @@ DYNAMIC_LIB_DECORATION void qcs_spectral_decompose_of_matrix(tf_qcs_matrix *a_ma
     free(W);
 }
 
-// sprawdzi czy b1 i b2 potrzebuj¹ dodatkowej transpozycji
+// sprawdzic czy b1 i b2 potrzebuja dodatkowej transpozycji
 DYNAMIC_LIB_DECORATION void qcs_svd_decompose_of_matrix(tf_qcs_matrix *state, tf_qcs_matrix *out_coeff, tf_qcs_matrix *out_base1, tf_qcs_matrix *out_base2)
 {
     int idx,i, j;
@@ -1388,6 +1401,7 @@ DYNAMIC_LIB_DECORATION void qcs_svd_decompose_of_matrix(tf_qcs_matrix *state, tf
     out_coeff->rows=1;
     out_coeff->cols=qcs_min(m,n);
     out_coeff->m=malloc(sizeof(tf_qcs_matrix)*qcs_min(m,n));
+
     for(i=0;i<qcs_min(m,n);i++)
     {
         qcs_set_cell_at_matrix_direct( out_coeff, 0, i, *(S+i), 0);
@@ -2388,12 +2402,41 @@ DYNAMIC_LIB_DECORATION void qcs_delete_spectral_decomposition( tf_qcs_spectral_d
 
 DYNAMIC_LIB_DECORATION tf_qcs_svd_decomposition* qcs_create_svd_decomposition()
 {
+    tf_qcs_svd_decomposition *tmp;
 
+    tmp=malloc(sizeof(tf_qcs_svd_decomposition));
+
+    tmp->U = NULL;
+    tmp->S = NULL;
+    tmp->V = NULL;
+
+    return tmp;
 }
 
-DYNAMIC_LIB_DECORATION void qcs_delete_svd_decomposition( tf_qcs_spectral_decomposition *sd)
+DYNAMIC_LIB_DECORATION void qcs_delete_svd_decomposition( tf_qcs_svd_decomposition *sd)
 {
+    if(sd->U != NULL)
+    {
+        qcs_delete_matrix( sd->U );
+        sd->U = NULL;
+    }
 
+    if(sd->S != NULL)
+    {
+        qcs_delete_matrix( sd->S );
+        sd->S = NULL;
+    }
+
+    if(sd->V != NULL)
+    {
+        qcs_delete_matrix( sd->V );
+        sd->V = NULL;
+    }
+
+
+    free(sd);
+
+    sd=NULL;
 }
 
 

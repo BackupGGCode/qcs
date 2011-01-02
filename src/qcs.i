@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain <qcs@gmail.com>         *
- *                                                                         *
+ *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *                                         <M.Sawerwain@gmail.com>         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
  *                                                                         *
@@ -478,6 +478,39 @@ computations routines for Python and other script language supported by SWIG."
 	}	
 }
 
+%extend SVDDecomposition {
+
+	SVDDecomposition()
+	{
+		tf_qcs_svd_decomposition *sd;
+		
+		sd = qcs_create_svd_decomposition();
+		
+		return sd;
+	}
+
+	~SVDDecomposition()
+	{
+		qcs_delete_svd_decomposition(self);
+	}
+	
+	void PrU()
+	{
+		qcs_print_matrix(self->U);
+	}
+
+	void PrS()
+	{
+		qcs_print_matrix(self->S);
+	}
+
+	void PrV()
+	{
+		qcs_print_matrix(self->V);
+	}
+	
+}
+
 %extend Matrix {
 	%feature("autodoc", "Matrix() -- create empty matrix without rows and cols") Matrix();
 	Matrix()
@@ -650,6 +683,18 @@ computations routines for Python and other script language supported by SWIG."
 		return qcs_negativity_of_matrix(self);
 	}
 	
+    %feature("autodoc", "GetCol(int c)") GetCol(int c);
+    Matrix GetCol(int c)
+    {
+        return *qcs_get_column_from_matrix( self, c);
+    }
+
+    %feature("autodoc", "GetRow(int c)") GetRow(int r);
+    Matrix GetRow(int r)
+    {
+        return *qcs_get_row_from_matrix( self, r);
+    }
+    
 	%feature("autodoc", "PTraceQubit1(int n)") PTraceQubit1(int n);
 	Matrix PTraceQubit1(int n)
 	{
@@ -729,7 +774,7 @@ computations routines for Python and other script language supported by SWIG."
 		return qcs_matrix_ispure(self);
 	}
 	
-	%feature("autodoc", "SpectralDecomposition()") SpectralDecomposition();
+	%feature("autodoc", "SpectralDecomposition() -- create spectral decomposition") SpectralDecomposition();
 	SpectralDecomposition SpectralDecomposition()
 	{
 		SpectralDecomposition *sd;
@@ -748,6 +793,23 @@ computations routines for Python and other script language supported by SWIG."
 		return *sd;
 	}
 
+	%feature("autodoc", "SVDDecomposition() -- create svd decomposition") SVDDecomposition();
+	SVDDecomposition SVDDecomposition()
+	{
+		SVDDecomposition *sd;
+		
+		sd = qcs_create_svd_decomposition();
+		
+        sd->U = qcs_create_empty_matrix();
+        sd->S = qcs_create_empty_matrix();
+        sd->V = qcs_create_empty_matrix();
+		
+		qcs_svd_decompose_of_matrix(self, sd->S, sd->U, sd->V);
+			
+		return *sd;
+	}
+    
+    
 	%feature("autodoc", "CreateW0() -- create 9x9 W_0 witnesses") CreateW0();
 	void CreateW0()
 	{
