@@ -1,6 +1,7 @@
 /***************************************************************************
  *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
- *                                         <M.Sawerwain@gmail.com>         * *                                                                         *
+ *                                         <M.Sawerwain@gmail.com>         *
+ *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
  *                                                                         *
