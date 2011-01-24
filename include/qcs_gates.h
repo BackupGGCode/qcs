@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
@@ -19,35 +19,54 @@
  *   along with this program; if not, write to the                         *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/ 
+ ***************************************************************************/
 
-#ifndef __qcs_hash_table_h__
-#define __qcs_hash_table_h__
+#ifndef __qcs_gates_h__
+#define __qcs_gates_h__
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "qcs_hash_table.h"
+#include "qcs_complex.h"
+#include "qcs_matrix.h"
 
-typedef size_t qcs_hash_table_size;
-
-typedef struct s_qcs_hash_table_node {
-	char *key;
-	void *data;
-	struct s_qcs_hash_table_node *next;
-} t_qcs_hash_table_node ;
-
+extern t_qcs_hash_table *qudit_gates_cache;
 
 typedef struct {
-	qcs_hash_table_size size;
-	t_qcs_hash_table_node **nodes;
-	qcs_hash_table_size (*qcs_hash_table_func)(const char *);
-} t_qcs_hash_table;
+        int gate_type;
+        int freedom;
+        tf_qcs_matrix *m;
+} t_qcs_qudit_gate_cache_element;
 
-t_qcs_hash_table *qcs_hash_table_create(qcs_hash_table_size, qcs_hash_table_size (*hash_func)(const char *));
-void qcs_hash_table_destroy(t_qcs_hash_table *hash_tbl);
-int qcs_hash_table_insert(t_qcs_hash_table *hash_tbl, const char *key, void *data);
-int qcs_hash_table_remove(t_qcs_hash_table *hash_tbl, const char *key);
-void *qcs_hash_table_get(t_qcs_hash_table *hash_tbl, const char *key);
+typedef t_qcs_qudit_gate_cache_element *pt_qcs_qudit_gate_cache_element;
 
-void qcs_hash_table_basic_display(t_qcs_hash_table *hash_tbl, FILE *f);
+enum _qcs_gate_type {
+	QCS_ZERO_GATE = 0,
+	QCS_ID_GATE,
+	QCS_NOT_GATE,
+	QCS_PAULIX_GATE,
+	QCS_PAULIY_GATE,
+	QCS_PAULIZ_GATE,
+	QCS_HADAMARD_GATE,
+	QCS_SQUARE_ROOT_GATE,
+	QCS_X_ROT90_GATE,
+	QCS_Y_ROT90_GATE,
+	QCS_Z_ROT90_GATE,
+	QCS_MX_ROT90_GATE,
+	QCS_MY_ROT90_GATE,
+	QCS_MZ_ROT90_GATE,
+	QCS_ROT_ALPHA_GATE,
+	QCS_ROT_THETA_GATE,
+	QCS_T_GATE,
+	QCS_S_GATE,
+	QCS_PHASE_GATE,
+	QCS_PHASE_F_GATE,
+    QCS_HADAMARD_GATE_d,
+    QCS_PAULIX_GATE_d,
+    QCS_PAULIZ_GATE_d
+};
 
-#endif /* __qcs_hash_table_h__ */
+tf_qcs_matrix *get_gate(enum _qcs_gate_type t);
+char *get_gate_name(enum _qcs_gate_type t);
+
+
+
+#endif /* __qcs_gates_h__ */
