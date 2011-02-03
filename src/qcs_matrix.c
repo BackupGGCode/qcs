@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *   Copyright (C) 2007 -- 2008 by Przemys³aw Ratajczak                    *
  *   Copyright (C) 2005 -- 2006 by Kamil Paw³owski                         *
@@ -655,6 +655,50 @@ DYNAMIC_LIB_DECORATION void qcs_mul_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b
      }
 }
 
+// A = A + cB
+void qcs_add_isM_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_in)
+{
+    int i, j;
+    tf_qcs_complex tmp1, tmp2;
+
+     for(i=0;i<a_in->rows;i++)
+     {
+        for(j=0;j<a_in->cols;j++)
+        {
+            tmp1.re=0; tmp1.im=0;
+            qcs_complex_mul(b_in, (c_in->m + (i*a_in->cols) + j), &tmp1 );
+
+            tmp2.re=0; tmp2.im=0;
+            qcs_complex_add((a_in->m + (i*a_in->cols) + j), &tmp1, &tmp2);
+
+            (a_in->m + (i*a_in->cols) + j)->re = tmp2.re;
+            (a_in->m + (i*a_in->cols) + j)->im = tmp2.im;
+        }
+     }
+}
+
+// A = A - cB
+void qcs_sub_isM_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_in)
+{
+    int i, j;
+    tf_qcs_complex tmp1, tmp2;
+
+     for(i=0;i<a_in->rows;i++)
+     {
+        for(j=0;j<a_in->cols;j++)
+        {
+            tmp1.re=0; tmp1.im=0;
+            qcs_complex_mul(b_in, (c_in->m + (i*a_in->cols) + j), &tmp1 );
+
+            tmp2.re=0; tmp2.im=0;
+            qcs_complex_sub((a_in->m + (i*a_in->cols) + j), &tmp1, &tmp2);
+
+            (a_in->m + (i*a_in->cols) + j)->re = tmp2.re;
+            (a_in->m + (i*a_in->cols) + j)->im = tmp2.im;
+        }
+     }
+}
+
 DYNAMIC_LIB_DECORATION void qcs_add_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out)
 {
      int i, j;
@@ -702,10 +746,67 @@ DYNAMIC_LIB_DECORATION void qcs_mul_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_co
 
 DYNAMIC_LIB_DECORATION void qcs_div_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out)
 {
+     int i, j;
+
+     for(i=0;i<a_in->rows;i++)
+     {
+        for(j=0;j<a_in->cols;j++)
+        {
+            qcs_complex_div((a_in->m + (i*a_in->cols) + j),
+                        b_in,
+                        (c_out->m + (i*a_in->cols) + j));
+        }
+     }
+}
+
+extern void cgetrf_(int* M, int *N, Complex* A, int* LDA, int* IPIV, int* INFO);
+
+int cgetrf(int M, int N, Complex* A, int LDA, int* IPIV)
+{
+    int INFO;
+
+    cgetrf_ (&M, &N, A, &LDA, IPIV, &INFO);
+
+    return INFO;
+}
+
+extern void cgetri_(int *N, Complex *A, int *LDA, int *IPIV, Complex *WORK, int *LWORK, int *INFO) ;
+
+int cgetri(int N, Complex *A, int LDA, int *IPIV, Complex *WORK, int LWORK)
+{
+    int INFO;
+
+    cgetri_( &N, A, &LDA, IPIV, WORK, &LWORK, &INFO);
+
+    return INFO;
 }
 
 DYNAMIC_LIB_DECORATION void qcs_inv_matrix(tf_qcs_matrix *a_in)
 {
+    Complex *A, *WORK;
+
+    int N, info, i, j, k, LDA, LWORK, *IPIV;
+
+    N = a_in->rows;
+    LDA=N;
+    LWORK=N*N;
+
+    IPIV = malloc(sizeof(int)*(N+1));
+    memset(IPIV, 0, sizeof(int)*(N+1));
+
+    WORK = malloc(sizeof(Complex)*LWORK);
+    memset(WORK, 0, sizeof(Complex)*LWORK);
+
+    A = a_in->m;
+
+    info = cgetrf(N, N, A, N, IPIV );
+    //printf("cgetrf: info %d\n", info);
+
+    info = cgetri(N, A, LDA, IPIV, WORK, LWORK );
+    //printf("cgetri: info %d\n", info);
+
+    free(WORK);
+    free(IPIV);
 }
 
 DYNAMIC_LIB_DECORATION tf_qcs_complex qcs_calc_dot_of_vector(tf_qcs_matrix *vec_in)
@@ -1536,6 +1637,159 @@ DYNAMIC_LIB_DECORATION void qcs_norm_of_matrix_self(tf_qcs_matrix *a_mat)
     qcs_delete_matrix(out);
 
     qcs_square_root_of_operator_matrix_self(a_mat);
+}
+
+DYNAMIC_LIB_DECORATION void qcs_exp_of_matrix(tf_qcs_matrix *a_in)
+{
+    tf_qcs_matrix *a_out, *E, *D, *X, *cX, *Eshadow, *Dshadow, *Xshadow;
+
+
+    tf_qcs_real_number f,v,c;
+    tf_qcs_complex ctmp;
+    int e,s,k,q,p;
+
+    a_out = qcs_clone_matrix( a_in );
+
+    v = qcs_infinity_norm_of_matrix( a_in ).re;
+    f = (float)frexp( v, &e );
+    s=qcs_max(0,e+1);
+
+//    printf("v=%f\n", v);
+//    printf("f=%f, e=%d, s=%d\n", f, e, s);
+
+    ctmp.re = powf(2.0f,(float)s);
+    ctmp.im=0;
+    qcs_div_scalar_matrix(a_in, &ctmp, a_out );
+
+    Xshadow = qcs_create_matrix( a_in->rows, a_in->cols);
+    X = qcs_clone_matrix( a_out );
+    c = 0.5f;
+
+    Eshadow = qcs_create_matrix( a_in->rows, a_in->cols);
+    E = qcs_create_matrix( a_in->rows, a_in->cols);
+    qcs_eye_matrix( E );
+    ctmp.re=c;
+    ctmp.im=0;
+    qcs_add_isM_matrix(E, &ctmp, a_out);
+
+    Dshadow = qcs_create_matrix( a_in->rows, a_in->cols);
+    D = qcs_create_matrix( a_in->rows, a_in->cols);
+    qcs_eye_matrix( D );
+    ctmp.re=c;
+    ctmp.im=0;
+    qcs_sub_isM_matrix(D, &ctmp, a_out);
+
+    q = 6;
+    p = 1;
+
+/*    printf("X\n");
+    qcs_print_matrix( X );
+
+    printf("E\n");
+    qcs_print_matrix( E );
+
+    printf("D\n");
+    qcs_print_matrix( D );*/
+
+    cX = qcs_create_matrix( a_in->rows, a_in->cols);
+
+    for(k=2; k<=q; k++)
+    {
+        c = c * (q-k+1) / (k*(2*q-k+1));
+        //printf("k = %d, c = %f\n", k, c);
+
+        // X = A * X
+        qcs_zero_matrix(Xshadow);
+        qcs_mul_matrix(a_out,X,Xshadow);
+        qcs_copy_matrix(Xshadow, X);
+
+        // cX = c * X
+        ctmp.re=c;
+        ctmp.im=0;
+        qcs_zero_matrix(cX);
+        qcs_mul_scalar_matrix(X, &ctmp, cX);
+
+        // E = E + cX
+        qcs_zero_matrix(Eshadow);
+        qcs_add_matrix(E, cX, Eshadow);
+        qcs_copy_matrix(Eshadow, E);
+
+        if(p) {
+            // D = D + cX
+            qcs_zero_matrix(Dshadow);
+            qcs_add_matrix(D, cX, Dshadow);
+            qcs_copy_matrix(Dshadow, D);
+        }
+        else {
+            // D = D - cX
+            qcs_zero_matrix(Dshadow);
+            qcs_sub_matrix(D, cX, Dshadow);
+            qcs_copy_matrix(Dshadow, D);
+        }
+
+        p=!p;
+
+    } // for(k=2; k<=q; k++)
+
+/*    printf("D\n");
+    qcs_print_matrix( D );
+
+    printf("E\n");
+    qcs_print_matrix( E );*/
+
+    // E = D\E or E = inv(D) * E
+    qcs_zero_matrix(Eshadow);
+    qcs_inv_matrix( D );
+    qcs_mul_matrix(D,E,Eshadow);
+    qcs_copy_matrix(Eshadow, E);
+
+    for(k=1;k<=s;k++)
+    {
+        qcs_zero_matrix(Eshadow);
+        qcs_mul_matrix(E,E,Eshadow);
+        qcs_copy_matrix(Eshadow, E);
+    }
+
+    qcs_copy_matrix(E, a_in);
+
+    qcs_delete_matrix( cX );
+
+    qcs_delete_matrix( D );
+    qcs_delete_matrix( Dshadow );
+
+    qcs_delete_matrix( E );
+    qcs_delete_matrix( Eshadow );
+
+    qcs_delete_matrix( X );
+    qcs_delete_matrix( Xshadow );
+
+    qcs_delete_matrix( a_out );
+}
+
+DYNAMIC_LIB_DECORATION tf_qcs_complex qcs_infinity_norm_of_matrix(tf_qcs_matrix *a)
+{
+    tf_qcs_complex t;
+    tf_qcs_real_number rnorm, r_tmp;
+    int r,c;
+
+    t.re=0; t.im=0;
+
+    for( r = 0 ; r < a->rows ; r++)
+    {
+        // calulate sum or row "r"
+        rnorm=0;
+        for( c = 0 ; c < a->cols; c++)
+        {
+            r_tmp=0;
+            qcs_mod_complex(a->m + (r*a->cols) + c, &r_tmp);
+            rnorm = rnorm + r_tmp;
+        }
+
+        if (rnorm > t.re) t.re=rnorm;
+
+    }
+
+    return t;
 }
 
 DYNAMIC_LIB_DECORATION tf_qcs_real_number qcs_entropy_of_matrix(tf_qcs_matrix *a)

@@ -716,9 +716,21 @@ computations routines for Python and other script language supported by SWIG."
 	%feature("autodoc", "Sqrt()") Sqrt();
 	void Sqrt()
 	{
-		qcs_square_root_of_operator_matrix_self(self);
+		qcs_square_root_of_operator_matrix_self( self );
 	}	
 
+	%feature("autodoc", "Exp()") Exp();
+	void Exp()
+	{
+		qcs_exp_of_matrix( self );
+	}
+
+	%feature("autodoc", "Inv()") Inv();
+	void Inv()
+	{
+		qcs_inv_matrix( self );
+	}
+	
 	%feature("autodoc", "Transpose()") Transpose();
 	void Transpose()
 	{

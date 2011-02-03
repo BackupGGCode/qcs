@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *   Copyright (C) 2007 -- 2008 by Przemys³aw Ratajczak                    *
  *   Copyright (C) 2005 -- 2006 by Kamil Paw³owski                         *
@@ -164,6 +164,11 @@ void qcs_add_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_o
 void qcs_sub_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_out);
 void qcs_mul_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_out);
 
+// A = A + cB
+void qcs_add_isM_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_in);
+// A = A - cB
+void qcs_sub_isM_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_in);
+
 void qcs_add_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
 void qcs_sub_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
 void qcs_mul_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
@@ -190,6 +195,10 @@ void qcs_square_root_of_operator_matrix_self(tf_qcs_matrix *a_mat);
 
 tf_qcs_matrix* qcs_norm_of_matrix(tf_qcs_matrix *a_mat);
 void qcs_norm_of_matrix_self(tf_qcs_matrix *a_mat);
+
+void qcs_exp_of_matrix(tf_qcs_matrix *a_in);
+
+tf_qcs_complex qcs_infinity_norm_of_matrix(tf_qcs_matrix *a);
 
 tf_qcs_real_number qcs_entropy_of_matrix(tf_qcs_matrix *a);
 tf_qcs_real_number qcs_linear_entropy_of_matrix(tf_qcs_matrix *a);
