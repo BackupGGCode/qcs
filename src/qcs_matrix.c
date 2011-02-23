@@ -921,6 +921,23 @@ DYNAMIC_LIB_DECORATION void qcs_transpose_matrix(tf_qcs_matrix *a_in)
     }
 }
 
+DYNAMIC_LIB_DECORATION void qcs_scalar_mul_matrix(tf_qcs_matrix *a_mat, tf_qcs_complex *b_in)
+{
+     int i, j;
+        tf_qcs_complex t;
+
+     for(i=0;i<a_mat->rows;i++)
+     {
+        for(j=0;j<a_mat->cols;j++)
+        {
+            qcs_complex_mul((a_mat->m + (i*a_mat->cols) + j),
+                        b_in,
+                        &t);
+            *(a_mat->m + (i*a_mat->cols) + j) = t;
+        }
+     }
+}
+
 DYNAMIC_LIB_DECORATION void qcs_basic_sum_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_out)
 {
      int i, j, ii, jj, tcols, trows;
@@ -1109,7 +1126,7 @@ void qcs_matrix_realignment(tf_qcs_matrix *a_in, tf_qcs_matrix *out_in)
     int ox=0, oy=0, x, y, i, j, d, dsqr;
     tf_qcs_complex t;
 
-    if(a_in->q == 2) // for q=2 and freedom > 1
+   if(a_in->q == 2) // for q=2 and freedom > 1
     {
         d=a_in->freedom_level;
         dsqr=(d*d);
@@ -1136,6 +1153,76 @@ void qcs_matrix_realignment(tf_qcs_matrix *a_in, tf_qcs_matrix *out_in)
             //printf("\n");
         }
     }
+    else
+    {
+       if((a_in->q % 2) == 0)
+        {
+            //printf("other case (q %% 2 == 0)\n");
+            d = (int)sqrtf(a_in->cols);
+            dsqr = a_in->cols;
+            //printf("d=%d\ndsqr=%d\n",d,dsqr);
+            x=0;
+            for(i=0;i<d;i++)
+            {
+                for(j=0;j<d;j++)
+                {
+                    //printf("[%3d,%3d] ", (i*d)+1, (j*d)+1 );
+                    for(y=0;y<dsqr;y++)
+                    {
+                        ox=(i * d) + (y / d);
+                        oy=(j * d) + (y % d);
+                        //printf("{[%d,%d] <- [%d,%d]} ", ox+1, oy+1, y+1, x+1);
+                        //t = *qcs_get_cell_at_matrix_complex(a_in, y, x);
+                        //printf("[%d,%d] [%2.2f,%2.2f] ", y+1, x+1, t.re, t.im);
+
+                        qcs_set_cell_at_matrix_complex(
+                            out_in,
+                            ox, oy, qcs_get_cell_at_matrix_complex(a_in, y, x));
+                    }
+                    //printf("\n");
+                    x++;
+                }
+                //printf("\n");
+            }
+        } // if((a_in->q % 2) == 0)
+    }
+}
+
+void qcs_matrix_realignment2(tf_qcs_matrix *a_in, tf_qcs_matrix *out_in)
+{
+    int ox=0, oy=0, x, y, i, j, d, dsqr;
+    tf_qcs_complex t;
+
+        if((a_in->q % 2) == 0)
+        {
+            printf("other case (q %% 2 == 0)\n");
+            d = (int)sqrtf(a_in->cols);
+            dsqr = a_in->cols;
+            printf("d=%d\ndsqr=%d\n",d,dsqr);
+            x=0;
+            for(i=0;i<d;i++)
+            {
+                for(j=0;j<d;j++)
+                {
+                    //printf("[%3d,%3d] ", (i*d)+1, (j*d)+1 );
+                    for(y=0;y<dsqr;y++)
+                    {
+                        ox=(i * d) + (y / d);
+                        oy=(j * d) + (y % d);
+                        //printf("{[%d,%d] <- [%d,%d]} ", ox+1, oy+1, y+1, x+1);
+                        //t = *qcs_get_cell_at_matrix_complex(a_in, y, x);
+                        //printf("[%d,%d] [%2.2f,%2.2f] ", y+1, x+1, t.re, t.im);
+
+                        qcs_set_cell_at_matrix_complex(
+                            out_in,
+                            ox, oy, qcs_get_cell_at_matrix_complex(a_in, y, x));
+                    }
+                    //printf("\n");
+                    x++;
+                }
+                //printf("\n");
+            }
+        } // if((a_in->q % 2) == 0)
 }
 
 DYNAMIC_LIB_DECORATION void qcs_swap_block_matrix(tf_qcs_matrix *a_in, int r1, int c1, int r2, int c2, int size_r, int size_c)
@@ -2245,9 +2332,9 @@ DYNAMIC_LIB_DECORATION void qcs_print_matrix(tf_qcs_matrix *a_in)
             tf_qcs_real_number re=(a_in->m+i*a_in->cols+j)->re;
             tf_qcs_real_number im=(a_in->m+i*a_in->cols+j)->im;
 #ifdef PYTHON_SCRIPT
-            PySys_WriteStdout("(%2.2f+%2.2fi) ", re, im);
+            PySys_WriteStdout("(%3.3f+%3.3fi) ", re, im);
 #else
-            printf("(%2.2f+%2.2fi) ", re, im);
+            printf("(%3.3f+%3.3fi) ", re, im);
 #endif
         }
 #ifdef PYTHON_SCRIPT
@@ -2257,6 +2344,35 @@ DYNAMIC_LIB_DECORATION void qcs_print_matrix(tf_qcs_matrix *a_in)
 #endif
     }
 }
+
+DYNAMIC_LIB_DECORATION void qcs_print_matrix_only_real_part(tf_qcs_matrix *a_in)
+{
+    int i, j;
+
+    assert(a_in != NULL);
+    assert(a_in->rows > 0 && a_in->cols > 0);
+
+    for (i=0; i<a_in->rows; i++)
+    {
+        for (j=0; j<a_in->cols; j++)
+        {
+            //qcs_print_complex(a_in->m+i*a_in->cols+j);
+            tf_qcs_real_number re=(a_in->m+i*a_in->cols+j)->re;
+            //tf_qcs_real_number im=(a_in->m+i*a_in->cols+j)->im;
+#ifdef PYTHON_SCRIPT
+            PySys_WriteStdout("%2.2f ", re);
+#else
+            printf("%2.2f ", re);
+#endif
+        }
+#ifdef PYTHON_SCRIPT
+     PySys_WriteStdout("\n");
+#else
+     printf("\n");
+#endif
+    }
+}
+
 
 DYNAMIC_LIB_DECORATION void qcs_print_matrix_dot(tf_qcs_matrix *a_in, int bits, int base)
 {

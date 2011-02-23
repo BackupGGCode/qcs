@@ -157,6 +157,7 @@ void qcs_partial_transpose_matrix_qudit(tf_qcs_matrix *a_in, int i);
 tf_qcs_matrix *qcs_calculate_d_dot_dt_matrix(tf_qcs_matrix *a_in);
 
 void qcs_matrix_realignment(tf_qcs_matrix *a_in, tf_qcs_matrix *out_in);
+void qcs_matrix_realignment2(tf_qcs_matrix *a_in, tf_qcs_matrix *out_in);
 
 void qcs_swap_block_matrix(tf_qcs_matrix *a_in, int r1, int c1, int r2, int c2, int size_r, int size_c);
 
@@ -173,6 +174,8 @@ void qcs_add_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_mat
 void qcs_sub_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
 void qcs_mul_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
 void qcs_div_scalar_matrix(tf_qcs_matrix *a_in, tf_qcs_complex *b_in, tf_qcs_matrix *c_out);
+
+void qcs_scalar_mul_matrix(tf_qcs_matrix *a_mat, tf_qcs_complex *b_in);
 
 void qcs_basic_sum_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_out);
 void qcs_tensor_matrix(tf_qcs_matrix *a_in, tf_qcs_matrix *b_in, tf_qcs_matrix *c_out);
@@ -226,6 +229,7 @@ void qcs_print_eigenvalue_of_matrix(tf_qcs_matrix *a);
 void qcs_make_eigenvectors_of_matrix(tf_qcs_matrix *a);
 
 void qcs_print_matrix(tf_qcs_matrix *a_in);
+void qcs_print_matrix_only_real_part(tf_qcs_matrix *a_in);
 void qcs_print_matrix_dot(tf_qcs_matrix *a_in, int bits, int base);
 
 void qcs_print_matrix_in_matlab_format(tf_qcs_matrix *a_in);

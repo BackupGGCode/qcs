@@ -65,7 +65,7 @@ DYNAMIC_LIB_DECORATION void qcs_delete_qubit(tf_qcs_qubit *q)
     q=NULL;
 }
 
-static void qcs_make_projector_in_base(tf_qcs_qubit_base_desc *base)
+DYNAMIC_LIB_DECORATION void qcs_make_projector_in_base(tf_qcs_qubit_base_desc *base)
 {
     tf_qcs_complex tmp;
 
@@ -175,8 +175,8 @@ DYNAMIC_LIB_DECORATION void qcs_set_base(tf_qcs_qubit_base_desc *base, tf_qcs_co
     base->v1_a = v1_a;
     base->v1_b = v1_b;
 
-    base->gate_s0=qcs_create_matrix(2,2);
-    base->gate_s1=qcs_create_matrix(2,2);
+    if( base->gate_s0 == NULL ) base->gate_s0=qcs_create_matrix(2,2);
+    if( base->gate_s1 == NULL ) base->gate_s1=qcs_create_matrix(2,2);
 
     base->gate_s0->m[0]=base->v0_a;
     base->gate_s0->m[2]=base->v0_b;
@@ -184,10 +184,26 @@ DYNAMIC_LIB_DECORATION void qcs_set_base(tf_qcs_qubit_base_desc *base, tf_qcs_co
     base->gate_s1->m[1]=base->v1_a;
     base->gate_s1->m[3]=base->v1_b;
 
-    if( base->gate_s0 == NULL ) base->gate_s0=qcs_create_matrix(2,2);
-    if( base->gate_s1 == NULL ) base->gate_s1=qcs_create_matrix(2,2);
 
     qcs_make_projector_in_base(base);
+}
+
+DYNAMIC_LIB_DECORATION void qcs_zero_base(tf_qcs_qubit_base_desc *base)
+{
+    base->v0_a.re = 0;
+    base->v0_a.im = 0;
+
+    base->v0_b.re = 0;
+    base->v0_b.im = 0;
+
+    base->v1_a.re = 0;
+    base->v1_a.im = 0;
+
+    base->v1_b.re = 0;
+    base->v1_b.im = 0;
+
+    base->gate_s0 = NULL;
+    base->gate_s1 = NULL;
 }
 
 DYNAMIC_LIB_DECORATION void qcs_make_std_base(tf_qcs_qubit_base_desc *base)
@@ -246,8 +262,8 @@ DYNAMIC_LIB_DECORATION void qcs_make_pauli_y_base(tf_qcs_qubit_base_desc *base)
     base->v1_a.re=0; base->v1_a.im=-1;
     base->v1_b.re=0; base->v1_b.im=0;
 
-    base->gate_s0=qcs_create_matrix(2,2);
-    base->gate_s1=qcs_create_matrix(2,2);
+    if( base->gate_s0 == NULL ) base->gate_s0=qcs_create_matrix(2,2);
+    if( base->gate_s0 == NULL ) base->gate_s1=qcs_create_matrix(2,2);
 
     qcs_make_projector_in_base(base);
 }
@@ -329,7 +345,10 @@ DYNAMIC_LIB_DECORATION void qcs_make_b_base(tf_qcs_qubit_base_desc *base, tf_qcs
     qcs_make_projector_in_base(base);
 }
 
-
+DYNAMIC_LIB_DECORATION void qcs_make_b_base_float(tf_qcs_qubit_base_desc *base, float theta)
+{
+    qcs_make_b_base( base, theta);
+}
 // to delete
 /*void qcs_update_m_base(tf_qcs_qubit_base_desc *base, tf_qcs_real_number theta)
 {

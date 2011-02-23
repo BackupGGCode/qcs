@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
@@ -98,6 +98,8 @@ computations routines for Python and other script language supported by SWIG."
 
 %rename (CreateUxGateForQGames) qcs_create_matrix_for_ux_1q_gate_float_arg;
 %rename (CreateEGateForQGames) qcs_create_matrix_for_e_2q_gate_float_arg;
+
+%rename (CreateXYPerfectSpinTransferUnitrayOp) qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer_float_arg;
 
 %rename (DisplayTwoRegs) qcs_display_2_quantum_regs;
 %rename (DisplayThreeRegs) qcs_display_3_quantum_regs;
@@ -2050,9 +2052,9 @@ def SetMultistate(self, states):
   }
 
   %feature("autodoc", "Phase(int i)") Phase(int i);
-  void Phase(int i) 
+  void PhaseN(int i) 
   {
-    qcs_quantum_reg_phase_f_n(self, i);
+    qcs_quantum_reg_phase_n(self, i);
   }
 
   %feature("autodoc", "PhaseFN(int i)") PhaseFN(int i);
@@ -2070,7 +2072,7 @@ def SetMultistate(self, states):
   %feature("autodoc", "RotThetaN(int i, float theta)") RotThetaN(int i, float theta);
   void RotThetaN(int i, float theta)
   {
-  	qcs_quantum_reg_rotate_theta_n(self, theta, i);
+  	qcs_quantum_reg_rotate_theta_n( self, theta, i );
   }	
   
   %feature("autodoc", "XRot90N(int i)") XRot90N(int i);
@@ -2916,6 +2918,26 @@ def SetMultistate(self, states):
 		return qcs_quantum_reg_measure_one_qubit(self, k);
 	}
 
+    %feature("autodoc", "MeasureOneQubitInStdBase(int k) -> int") MeasureOneQubitInStdBase(int k);
+	int MeasureOneQubitInStdBase(int k)
+	{
+		return qcs_quantum_reg_measure_one_qubit_in_std_base(self, k);
+	}
+
+	%feature("autodoc", "MeasureOneQubitInBBase(int k, float a) -> int") MeasureOneQubitInBBase(int k, float a);
+	int MeasureOneQubitInBBase(int k, float a)
+	{
+		int s;
+		tf_qcs_qubit_base_desc base;
+		
+		qcs_zero_base( &base );
+		
+	    qcs_make_b_base(&base, a);
+		s=qcs_quantum_reg_measure_one_qubit_in_base(self, k, &base);
+		
+		return s;
+	}
+	
 	%feature("autodoc", "MeasureOneQubitForce(int k, int force_value) -> int") MeasureOneQubitForce(int k, int force_value);
 	int MeasureOneQubitForce(int k, int force_value)
 	{

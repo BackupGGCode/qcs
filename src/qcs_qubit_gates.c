@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
@@ -528,8 +528,8 @@ DYNAMIC_LIB_DECORATION void qcs_build_qubit_gates_matrix()
     (s_gate->m+2)->re=0; (s_gate->m+2)->im=0;     (s_gate->m+3)->re=0; (s_gate->m+3)->im=1;
 
 /* Phase gate matrix */
-    (phase_gate->m+0)->re=0; (phase_gate->m+0)->im=0;     (phase_gate->m+1)->re=0; (phase_gate->m+1)->im=0;
-    (phase_gate->m+2)->re=0; (phase_gate->m+2)->im=0;     (phase_gate->m+3)->re=0; (phase_gate->m+3)->im=0;
+    (phase_gate->m+0)->re=1; (phase_gate->m+0)->im=0;     (phase_gate->m+1)->re=0; (phase_gate->m+1)->im=0;
+    (phase_gate->m+2)->re=0; (phase_gate->m+2)->im=0;     (phase_gate->m+3)->re=0; (phase_gate->m+3)->im=1;
 
 /* Phase F gate matrix */
     (phase_f_gate->m+0)->re=1; (phase_f_gate->m+0)->im=0;     (phase_f_gate->m+1)->re=0;  (phase_f_gate->m+1)->im=0;
@@ -1170,6 +1170,59 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix* make_arbitrary_matrix_for_one_qubit(tf_qcs
     return u;
 }
 
+DYNAMIC_LIB_DECORATION void add_one_qubit_gate_to_operation_matrix(tf_qcs_matrix *u, tf_qcs_matrix *gate, int n, int t)
+{
+    tf_qcs_complex t1, t2, t3, t4,
+                   u1, u2, u3, u4,
+                   o1, o2, o3, o4;
+
+    int i, j, minimatrix=0, step=0;
+    char bins[128];
+
+    t++; // poprawka dotyczaca numeru qubitu
+
+    minimatrix=pow(2,n-1);
+    step=pow(2,n-t)-1;
+
+    j=1;
+    for (i=0;i<pow(2,n);i++)
+    {
+        qcs_dec2bin(i, n, &bins[0]);
+        bins[n]=0;
+
+        if (bins[t-1]=='0' && j<=minimatrix)
+        {
+
+            t1 = *(gate->m+0);
+            t2 = *(gate->m+1);
+            t3 = *(gate->m+2);
+            t4 = *(gate->m+3);
+
+            u1 = *qcs_get_cell_at_matrix_complex(u, i,        i);
+            u2 = *qcs_get_cell_at_matrix_complex(u, i,        i+1+step);
+            u3 = *qcs_get_cell_at_matrix_complex(u, i+1+step, i);
+            u4 = *qcs_get_cell_at_matrix_complex(u, i+1+step, i+1+step);
+
+            o1.re=0; o1.im=0;
+            o2.re=0; o2.im=0;
+            o3.re=0; o3.im=0;
+            o4.re=0; o4.im=0;
+
+            qcs_complex_add(&u1, &t1, &o1);
+            qcs_complex_add(&u2, &t2, &o2);
+            qcs_complex_add(&u3, &t3, &o3);
+            qcs_complex_add(&u4, &t4, &o4);
+
+            qcs_set_cell_at_matrix_complex(u, i,        i,        &o1);
+            qcs_set_cell_at_matrix_complex(u, i,        i+1+step, &o2);
+            qcs_set_cell_at_matrix_complex(u, i+1+step, i,        &o3);
+            qcs_set_cell_at_matrix_complex(u, i+1+step, i+1+step, &o4);
+
+            j++;
+        }
+    }
+}
+
 DYNAMIC_LIB_DECORATION tf_qcs_matrix *crot45_two_qubit_syntesis_u_matrix_one_control_one_target(int n, int c1, int t)
 {
     tf_qcs_complex tmp;
@@ -1780,4 +1833,127 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix *six_qubit_syntesis_u_matrix_five_control_o
         }
     }
     return u;
+}
+
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *create_xy_spins_hamiltonian(int n)
+{
+    int i, sizemat;
+
+    tf_qcs_complex j;
+    pf_qcs_matrix h, t, t1, t2;
+
+    sizemat = (int)pow(2, n) ;
+
+    h = qcs_create_matrix( sizemat, sizemat );
+    t = qcs_create_matrix( sizemat, sizemat );
+
+    for ( i = 0; i < (n-1) ; i++)
+    {
+        // X_{i} X{i+1}
+
+        t1 = make_arbitrary_matrix_for_one_qubit(get_pauli_x_gate(), n, i     );
+        t2 = make_arbitrary_matrix_for_one_qubit(get_pauli_x_gate(), n, i + 1 );
+
+        qcs_zero_matrix( t );
+        qcs_mul_matrix( t1, t2, t);
+        qcs_add_matrix(t, h, h);
+
+        qcs_delete_matrix( t1 );
+        qcs_delete_matrix( t2 );
+
+        // Y_{i} Y{i+1}
+
+        t1 = make_arbitrary_matrix_for_one_qubit(get_pauli_y_gate(), n, i     ) ;
+        t2 = make_arbitrary_matrix_for_one_qubit(get_pauli_y_gate(), n, i + 1 );
+
+        qcs_zero_matrix( t );
+        qcs_mul_matrix( t1, t2, t);
+        qcs_add_matrix(t, h, h);
+
+        qcs_delete_matrix( t1 );
+        qcs_delete_matrix( t2 );
+
+    } // for ( i = 0; i < (n-1) ; i++)
+    qcs_delete_matrix( t );
+
+    j.re = 0.5;
+    j.im = 0;
+    qcs_mul_scalar_matrix( h, &j, h);
+
+    return h;
+}
+
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *create_xy_spins_hamiltonian_with_jn(int n)
+{
+    int i, sizemat;
+
+    tf_qcs_complex j;
+    pf_qcs_matrix h, t, t1, t2;
+
+    sizemat = (int)pow(2, n) ;
+
+    h = qcs_create_matrix( sizemat, sizemat );
+    t = qcs_create_matrix( sizemat, sizemat );
+
+    for ( i = 0; i < (n-1) ; i++)
+    {
+        // X_{i} X{i+1}
+
+        t1 = make_arbitrary_matrix_for_one_qubit(get_pauli_x_gate(), n, i     );
+        t2 = make_arbitrary_matrix_for_one_qubit(get_pauli_x_gate(), n, i + 1 );
+
+        qcs_zero_matrix( t );
+        qcs_mul_matrix( t1, t2, t);
+        j.re = sqrt((i+1)*(n-(i+1))) / 2.0f;
+        j.im = 0;
+        qcs_mul_scalar_matrix( t, &j, t);
+        qcs_add_matrix(t, h, h);
+
+        qcs_delete_matrix( t1 );
+        qcs_delete_matrix( t2 );
+
+        // Y_{i} Y{i+1}
+
+        t1 = make_arbitrary_matrix_for_one_qubit(get_pauli_y_gate(), n, i     ) ;
+        t2 = make_arbitrary_matrix_for_one_qubit(get_pauli_y_gate(), n, i + 1 );
+
+        qcs_zero_matrix( t );
+        qcs_mul_matrix( t1, t2, t);
+        j.re = sqrt((i+1)*(n-(i+1))) / 2.0f;
+        j.im = 0;
+        qcs_mul_scalar_matrix( t, &j, t);
+        qcs_add_matrix(t, h, h);
+
+        qcs_delete_matrix( t1 );
+        qcs_delete_matrix( t2 );
+
+    } // for ( i = 0; i < (n-1) ; i++)
+
+    qcs_delete_matrix( t );
+
+    return h;
+}
+
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer(int n, tf_qcs_real_number t)
+{
+    tf_qcs_matrix *h;
+    tf_qcs_complex tmp;
+
+    h = create_xy_spins_hamiltonian_with_jn( n );
+
+    tmp.re=0;
+    tmp.im=-t ;
+
+    qcs_scalar_mul_matrix(h, &tmp);
+
+    qcs_exp_of_matrix( h );
+
+    qcs_chop_matrix( h );
+
+    return h;
+}
+
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer_float_arg(int n, float t)
+{
+        return qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer(n, t);
 }
