@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
@@ -22,6 +22,7 @@
  ***************************************************************************/
 
 #include <time.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "qcs.h"
@@ -82,6 +83,26 @@ DYNAMIC_LIB_DECORATION tf_qcs_real_number qcs_max_tf_qcs_real_number(tf_qcs_real
 }
 
 DYNAMIC_LIB_DECORATION int qcs_min(int a, int b)
+{
+    return a > b ? b : a ;
+}
+
+DYNAMIC_LIB_DECORATION int qcs_max_float(float a, float b)
+{
+    return a > b ? a : b ;
+}
+
+DYNAMIC_LIB_DECORATION int qcs_min_float(float a, float b)
+{
+    return a > b ? b : a ;
+}
+
+DYNAMIC_LIB_DECORATION int qcs_max_double(double a, double b)
+{
+    return a > b ? a : b ;
+}
+
+DYNAMIC_LIB_DECORATION int qcs_min_double(double a, double b)
 {
     return a > b ? b : a ;
 }
@@ -258,7 +279,66 @@ int qcs_kronecker_delta_function(int k, int j)
 DYNAMIC_LIB_DECORATION double qcs_diffclock(clock_t clock1, clock_t clock2)
 {
 	double diffticks=clock1-clock2;
-	double diffms=(diffticks)/(CLOCKS_PER_SEC/1000);
+
+        double diffms=(diffticks)/(CLOCKS_PER_SEC/1000);
+	//double diffms=(diffticks)/(CLOCKS_PER_SEC);
 
 	return diffms;
+}
+
+static inline void __cpuid(int info[4], int infoType)
+{
+    __asm__  __volatile__ ("cpuid" : "=a" (info[0]), "=b" (info[1]), "=c" (info[2]), "=d" (info[3])
+                      : "0" (infoType));
+}
+
+static inline uint64_t __rdtsc()
+ {
+        uint32_t low, high;
+
+        __asm__ __volatile__ (
+            "xorl %%eax,%%eax \n    cpuid"
+            ::: "%rax", "%rbx", "%rcx", "%rdx" );
+        __asm__ __volatile__ (
+                              "rdtsc" : "=a" (low), "=d" (high));
+
+        return (uint64_t)high << 32 | low;
+}
+
+static uint64_t start, end;
+
+DYNAMIC_LIB_DECORATION inline void reset_and_start_timer()
+{
+    start = __rdtsc();
+}
+
+DYNAMIC_LIB_DECORATION inline double get_elapsed_mcycles()
+{
+    end = __rdtsc();
+
+    return (end-start) / (1024.0 * 1024.0);
+}
+
+DYNAMIC_LIB_DECORATION inline int CPUSupportsSSE2()
+{
+    int info[4];
+
+    __cpuid(info, 1);
+    return (info[3] & (1 << 26));
+}
+
+DYNAMIC_LIB_DECORATION inline int CPUSupportsSSE4()
+{
+    int info[4];
+
+    __cpuid(info, 1);
+    return (info[2] & (1 << 19));
+}
+
+DYNAMIC_LIB_DECORATION inline int CPUSupportsAVX()
+{
+    int info[4];
+
+    __cpuid(info, 1);
+    return (info[2] & (1 << 28));
 }

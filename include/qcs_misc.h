@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
@@ -25,6 +25,9 @@
 #define __qcs_all_h__
 
 #include <time.h>
+#include <stdlib.h>
+#include <mm_malloc.h>
+
 
 #define tf_qcs_real_number float
 
@@ -64,6 +67,12 @@ extern "C" {
 int qcs_max(int a, int b);
 int qcs_min(int a, int b);
 
+int qcs_max_float(float a, float b);
+int qcs_min_float(float a, float b);
+
+int qcs_max_double(double a, double b);
+int qcs_min_double(double a, double b);
+
 tf_qcs_real_number qcs_max_tf_qcs_real_number(tf_qcs_real_number a, tf_qcs_real_number b);
 tf_qcs_real_number qcs_min_tf_qcs_real_number(tf_qcs_real_number a, tf_qcs_real_number b);
 
@@ -89,6 +98,12 @@ int qcs_fast_power_mod(int b, int x, int m);
 int qcs_kronecker_delta_function(int k, int j);
 
 double qcs_diffclock(clock_t clock1, clock_t clock2);
+
+inline void reset_and_start_timer();
+inline double get_elapsed_mcycles();
+inline int CPUSupportsSSE2();
+inline int CPUSupportsSSE4();
+inline int CPUSupportsAVX();
 
 #ifdef __cplusplus
 }
