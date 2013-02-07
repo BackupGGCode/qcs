@@ -1934,6 +1934,18 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix *create_xy_spins_hamiltonian_with_jn(int n)
     return h;
 }
 
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *create_xy_spins_hamiltonian_with_jn_for_qudit(int n,int freedom_level)
+{
+    int i, sizemat;
+
+    tf_qcs_complex j;
+    pf_qcs_matrix h, t, t1, t2;
+
+    sizemat = (int)pow(freedom_level, n) ;
+
+    return NULL;
+}
+
 DYNAMIC_LIB_DECORATION tf_qcs_matrix *qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer(int n, tf_qcs_real_number t)
 {
     tf_qcs_matrix *h;

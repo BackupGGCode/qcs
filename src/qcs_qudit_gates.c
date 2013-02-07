@@ -796,9 +796,62 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix *get_qudit_pauli_operator_gate(int freedom_
     return out_mat;
 }
 
+DYNAMIC_LIB_DECORATION tf_qcs_matrix *make_arbitrary_matrix_for_one_qudit(tf_qcs_matrix *gate, int n, int fd, int t)
+{
+    tf_qcs_matrix *u=NULL;
+
+    int dx, dy, x, y, i, j, minimatrix=0, step=0;
+    char dits[128];
+
+    t++; // poprawka dotyczaca numeru quditu
+
+    u=qcs_create_matrix(pow(fd,n), pow(fd,n));
+
+    minimatrix=pow(fd,n-1);
+    step=pow(fd,n-t)-1;
+
+    printf("minimatrices=%d, s=%d\n", minimatrix, step);
+
+    j=1;
+    dx=dy=0;
+    for (i=0;i<pow(fd,n);i++)
+    {
+        qcs_dec2base_d(i, n, fd, &dits[0]);
+        dits[n]=0;
+
+        if (dits[t-1]=='0' && j<=minimatrix)
+        {
+            for(x=0;x<fd;x++)
+            {
+                if(x==0)
+                    dx=0;
+                else
+                    dx=x+step*x;
+
+                for(y=0;y<fd;y++)
+                {
+                    if(y==0)
+                        dy=0;
+                    else
+                        dy=y+step*y;
+
+                    //printf("%d %d from %d %d\n",i+dx,i+dy,x,y);
+                    qcs_set_cell_at_matrix_complex(u, i+dx, i+dy, qcs_get_cell_at_matrix_complex(gate, x, y));
+                }
+            }
+            printf("\n");
+            //qcs_set_cell_at_matrix_complex(u, i, i,        (gate->m+0)); qcs_set_cell_at_matrix_complex(u, i, i+1+step  (gate->m+1));
+            //qcs_set_cell_at_matrix_complex(u, i+1+step, i, (gate->m+2)); qcs_set_cell_at_matrix_complex(u, i+1+step, i+1+step, (gate->m+3));
+            j++;
+        }
+    }
+
+    return u;
+}
+
 DYNAMIC_LIB_DECORATION tf_qcs_matrix *get_general_e_matrix(int fd, int k, int j)
 {
-    int v,u,value;
+    int v, u, value;
     tf_qcs_matrix *e_mat;
 
     e_mat = qcs_create_matrix(fd, fd);
@@ -871,7 +924,6 @@ DYNAMIC_LIB_DECORATION tf_qcs_matrix *get_general_eta_matrix(int fd, int r)
 
         qcs_add_matrix(e1, e_tmp1, e_tmp2);
         qcs_copy_matrix(e_tmp2, e_tmp1);
-
     }
 
     e2 = get_general_e_matrix(fd, r+1, r+1);

@@ -87,6 +87,9 @@ computations routines for Python and other script language supported by SWIG."
 %rename (CreateHermiteanRandomRealMatrix) qcs_create_hermitian_random_real_matrix;
 %rename (CreateHermiteanRandomMatrix) qcs_create_hermitian_random_matrix;
 
+%rename (DestroyOperator) qcs_create_destroy_operator;
+%rename (CreateOperator) qcs_create_create_operator;
+
 %rename (ReCreateQuantumRegBasedOnGivenDensityMatrix) qcs_recreate_quantum_reg_based_on_given_density_matrix;
 
 %rename (CreateMatrixForQubitGateX) qcs_create_matrix_for_qubit_gate_x;
@@ -106,6 +109,10 @@ computations routines for Python and other script language supported by SWIG."
 %rename (DisplayFourRegs) qcs_display_4_quantum_regs;
 
 %rename (Bin2Dec) qcs_bin2dec;
+
+%rename (CreateThetaOp) get_general_theta_matrix;
+%rename (CreateBetaOp) get_general_beta_matrix;
+%rename (CreateEtaOp) get_general_eta_matrix;
 
 %include "qcs_matrix.h"
 %include "qcs_complex.h"
@@ -135,6 +142,21 @@ computations routines for Python and other script language supported by SWIG."
  PySys_WriteStdout("%s\n", compilator_name());
  initialize_qcs_core_library();
  PySys_WriteStdout("+ qcs gate's cache initialised\n");
+%}
+#endif
+
+#ifdef PYTHON_SCRIPT
+%pythoncode %{
+
+def Arange(_s, _e, _step):
+	return qcs_create_matrix_arange_operation_with_float_args(_s, _e, _step)
+
+def Linspace(_s, _e, _n, endpoint = True):
+	if endpoint == True:
+		return qcs_create_matrix_linspace_operation_with_endpoint_with_float_args(_s, _e, _n)
+	else:
+		return qcs_create_matrix_linspace_operation_without_endpoint_with_float_args(_s, _e, _n)
+
 %}
 #endif
 
@@ -584,6 +606,295 @@ computations routines for Python and other script language supported by SWIG."
 		return *tqm;
 	}
 
+	/*
+	mul float scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rmul__(float a)") __rmul__(float a);
+	Matrix __rmul__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__mul__(float a)") __mul__(float a);
+	Matrix __mul__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	mul int scalar and matrix
+	*/
+	
+	
+	%feature("autodoc", "__rmul__(int a)") __rmul__(int a);
+	Matrix __rmul__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__mul__(int a)") __mul__(int a);
+	Matrix __mul__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	div float scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rdiv__(float a)") __rdiv__(float a);
+	Matrix __rdiv__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__div__(float a)") __div__(float a);
+	Matrix __div__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	div int scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rdiv__(int a)") __rdiv__(int a);
+	Matrix __rdiv__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__div__(int a)") __div__(int a);
+	Matrix __div__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}	
+	
+	/*
+	add float scalar and matrix
+	*/
+	
+	%feature("autodoc", "__radd__(float a)") __radd__(float a);
+	Matrix __radd__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__add__(float a)") __add__(float a);
+	Matrix __add__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	add int scalar and matrix
+	*/	
+	
+	%feature("autodoc", "__radd__(int a)") __radd__(int a);
+	Matrix __radd__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__add__(int a)") __add__(int a);
+	Matrix __add__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	sub float scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rsub__(float a)") __rsub__(float a);
+	Matrix __rsub__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__sub__(float a)") __sub__(float a);
+	Matrix __sub__(float a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+	sub int scalar and matrix
+	*/	
+	
+	%feature("autodoc", "__rsub__(int a)") __rsub__(int a);
+	Matrix __rsub__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__sub__(int a)") __sub__(int a);
+	Matrix __sub__(int a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=a;
+		cmplx.im=0;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}	
+	
 	%feature("autodoc", "Calc_D_dot_DT()") Calc_D_dot_DT();
 	Matrix Calc_D_dot_DT()
 	{

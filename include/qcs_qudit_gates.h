@@ -1,7 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2013 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
- *   Copyright (C) 2007 -- 2008 by Przemys³aw Ratajczak                    *
+ *   Copyright (C) 2007 -- 2008 by Przemyslaw Ratajczak                    *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
@@ -56,7 +56,7 @@ tf_qcs_matrix *get_qudit_cnot_swaped_gate(int freedom_level); //control & target
 tf_qcs_matrix *get_qudit_toffoli_gate(int freedom_level);
 tf_qcs_matrix *get_qudit_swap_gate(int freedom_level);
 
-/* different implemntation of qudit gates */
+/* different implementation of qudit gates */
 
 tf_qcs_matrix *get_qudit_hadamard_d_gate(int freedom_level);
 tf_qcs_matrix *get_qudit_pauli_x_d_gate(int freedom_level);
@@ -67,6 +67,10 @@ tf_qcs_matrix *get_qudit_power_of_z_gate(int freedom_level, int power);
 tf_qcs_matrix *get_qudit_power_of_u_gate(tf_qcs_matrix *u, int power);
 
 tf_qcs_matrix *get_qudit_pauli_operator_gate(int freedom_level, int r, int s);
+
+
+tf_qcs_matrix *make_arbitrary_matrix_for_one_qudit(tf_qcs_matrix *gate, int n, int fd, int t);
+
 
 /* SU(d) generators */
 tf_qcs_matrix *get_general_e_matrix(int fd, int k, int j); /*1 <= k,j <= d*/

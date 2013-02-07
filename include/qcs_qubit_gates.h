@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2010 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2013 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *                                                                         *
  *   Part of the Quantum Computing Simulator:                              *
@@ -124,6 +124,8 @@ int qcs_4q_cnot_gate_pqc(tf_qcs_qubit *in_qubit_1, tf_qcs_qubit *in_qubit_2, tf_
 tf_qcs_matrix *make_matrix_for_one_qubit(char *gate_type, int n, int t);
 tf_qcs_matrix *make_arbitrary_matrix_for_one_qubit(tf_qcs_matrix *gate, int n, int t);
 
+void add_one_qubit_gate_to_operation_matrix(tf_qcs_matrix *u, tf_qcs_matrix *gate, int n, int t);
+
 tf_qcs_matrix *crot45_two_qubit_syntesis_u_matrix_one_control_one_target(int n, int c1, int t);
 tf_qcs_matrix *crot90_two_qubit_syntesis_u_matrix_one_control_one_target(int n, int c1, int t);
 tf_qcs_matrix *crot_alpha_two_qubit_syntesis_u_matrix_one_control_one_target(int n, int c1, int t, tf_qcs_real_number k);
@@ -187,7 +189,14 @@ tf_qcs_matrix *six_qubit_syntesis_u_matrix_five_control_one_target_zero_control(
               tf_qcs_complex a, tf_qcs_complex b,
               tf_qcs_complex c, tf_qcs_complex d);
 
+/* spins hamiltonian */
 
+tf_qcs_matrix *create_xy_spins_hamiltonian(int n);
+tf_qcs_matrix *create_xy_spins_hamiltonian_with_jn(int n);
+tf_qcs_matrix *create_xy_spins_hamiltonian_with_jn_for_qudit(int n,int freedom_level);
+
+tf_qcs_matrix *qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer(int n, tf_qcs_real_number t);
+tf_qcs_matrix *qcs_create_matrix_of_unitary_operation_of_xy_spin_perfect_transfer_float_arg(int n, float t);
 #ifdef __cplusplus
 }
 #endif
