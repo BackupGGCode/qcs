@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005 -- 2011 by Marek Sawerwain                         *
+ *   Copyright (C) 2005 -- 2013 by Marek Sawerwain                         *
  *                                         <M.Sawerwain@gmail.com>         *
  *   Part of the Quantum Computing Simulator:                              *
  *   http://code.google.com/p/qcs                                          *
@@ -22,12 +22,14 @@
 
 %define DOCSTRING_MODULE
 "Quantum Computing Simulator (QCS) port of ANSI C/C++/FORTRAN library of quantum
-computations routines for Python and other script language supported by SWIG."
+computations routines for Python and other languages supported by SWIG."
 %enddef
 
 %module (docstring=DOCSTRING_MODULE) qcs
 
 %{
+#include <complex.h>
+
 #include <math.h>
 #include <time.h>
 #include <stdarg.h> 
@@ -35,6 +37,7 @@ computations routines for Python and other script language supported by SWIG."
 #ifdef PYTHON_SCRIPT
 #include <Python.h>
 #endif
+
 
 #include "qcs_matrix.h"
 #include "qcs_complex.h"
@@ -49,6 +52,10 @@ computations routines for Python and other script language supported by SWIG."
 #include "qcs_quarray.h"
 #include "qcs_qwalk_1d.h"
 #include "qcs_qwalk_2d.h"
+
+#define QCS_INTERFACE_VER "0.2.0"
+static const char* _QCS_I_CompileSystem=": compilation date (" __DATE__ " "  __TIME__")";
+
 %}
 
 %rename (Fidelity) qcs_fidelity;
@@ -92,12 +99,12 @@ computations routines for Python and other script language supported by SWIG."
 
 %rename (ReCreateQuantumRegBasedOnGivenDensityMatrix) qcs_recreate_quantum_reg_based_on_given_density_matrix;
 
-%rename (CreateMatrixForQubitGateX) qcs_create_matrix_for_qubit_gate_x;
-%rename (CreateMatrixForQubitGateY) qcs_create_matrix_for_qubit_gate_y;
-%rename (CreateMatrixForQubitGateZ) qcs_create_matrix_for_qubit_gate_z;
-%rename (CreateMatrixForQubitGateHadamard) qcs_create_matrix_for_qubit_gate_hadamard;
-%rename (CreateMatrixForCNotGateForQubit) cnot_qubit_syntesis_u_matrix_one_control_one_target;
-%rename (CreateMatrixForCNotGateForQudit) cnot_qudit_syntesis_one_control_one_target;
+%rename (MatrixPauliX) qcs_create_matrix_for_qubit_gate_x;
+%rename (MatrixPauliY) qcs_create_matrix_for_qubit_gate_y;
+%rename (MatrixPauliZ) qcs_create_matrix_for_qubit_gate_z;
+%rename (MatrixHadamard) qcs_create_matrix_for_qubit_gate_hadamard;
+%rename (MatrixCNotQubit) cnot_qubit_syntesis_u_matrix_one_control_one_target;
+%rename (MatrixCNotQudit) cnot_qudit_syntesis_one_control_one_target;
 
 %rename (CreateUxGateForQGames) qcs_create_matrix_for_ux_1q_gate_float_arg;
 %rename (CreateEGateForQGames) qcs_create_matrix_for_e_2q_gate_float_arg;
@@ -114,6 +121,9 @@ computations routines for Python and other script language supported by SWIG."
 %rename (CreateBetaOp) get_general_beta_matrix;
 %rename (CreateEtaOp) get_general_eta_matrix;
 
+%include "complex.i"
+%include "typemaps.i"
+
 %include "qcs_matrix.h"
 %include "qcs_complex.h"
 %include "qcs_qubit.h"
@@ -125,7 +135,7 @@ computations routines for Python and other script language supported by SWIG."
 %include "qcs_quarray.h"
 %include "qcs_qwalk_1d.h"
 %include "qcs_qwalk_2d.h"
-%include "typemaps.i"
+
 
 #ifdef PYTHON_SCRIPT
 %init %{
@@ -137,11 +147,14 @@ computations routines for Python and other script language supported by SWIG."
  "\\-\\-/ \\---/ \\---/ \n"
  "   \\\n"
  );
+
  PySys_WriteStdout("%s\n", version());
  PySys_WriteStdout("%s\n", compile_system());
  PySys_WriteStdout("%s\n", compilator_name());
  initialize_qcs_core_library();
  PySys_WriteStdout("+ qcs gate's cache initialised\n");
+ PySys_WriteStdout("+ QCS for Python interface version: %s\n", QCS_INTERFACE_VER);
+ PySys_WriteStdout("%s\n", _QCS_I_CompileSystem);
 %}
 #endif
 
@@ -607,7 +620,43 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	mul float scalar and matrix
+		mul complex scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rmul__(complex a)") __rmul__(complex a);
+	Matrix __rmul__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__mul__(complex a)") __mul__(complex a);
+	Matrix __mul__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_mul_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	/*
+		mul float scalar and matrix
 	*/
 	
 	%feature("autodoc", "__rmul__(float a)") __rmul__(float a);
@@ -643,7 +692,7 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	mul int scalar and matrix
+		mul int scalar and matrix
 	*/
 	
 	
@@ -680,7 +729,44 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	div float scalar and matrix
+		div complex scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rdiv__(complex a)") __rdiv__(complex a);
+	Matrix __rdiv__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__div__(complex a)") __div__(complex a);
+	Matrix __div__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_div_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	
+	/*
+		div float scalar and matrix
 	*/
 	
 	%feature("autodoc", "__rdiv__(float a)") __rdiv__(float a);
@@ -750,9 +836,45 @@ def Linspace(_s, _e, _n, endpoint = True):
 		
 		return *tqm;
 	}	
-	
+
 	/*
-	add float scalar and matrix
+		add complex scalar and matrix
+	*/
+	
+	%feature("autodoc", "__add__(complex a)") __add__(complex a);
+	Matrix __add__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	%feature("autodoc", "__radd__(complex a)") __radd__(complex a);
+	Matrix __radd__(complex  a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re = __real__ a;
+		cmplx.im = __imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_add_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+
+	/*
+		add float scalar and matrix
 	*/
 	
 	%feature("autodoc", "__radd__(float a)") __radd__(float a);
@@ -788,7 +910,7 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	add int scalar and matrix
+		add int scalar and matrix
 	*/	
 	
 	%feature("autodoc", "__radd__(int a)") __radd__(int a);
@@ -824,7 +946,44 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	sub float scalar and matrix
+		sub complex scalar and matrix
+	*/
+	
+	%feature("autodoc", "__rsub__(complex a)") __rsub__(complex a);
+	Matrix __rsub__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=__real__ a;
+		cmplx.im=__imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	%feature("autodoc", "__sub__(complex a)") __sub__(complex a);
+	Matrix __sub__(complex a)
+	{
+	  	tf_qcs_matrix *tqm;
+		tf_qcs_complex cmplx;
+
+		cmplx.re=__real__ a;
+		cmplx.im=__imag__ a;
+		
+		tqm=qcs_create_matrix(self->rows, self->cols);
+		
+		qcs_sub_scalar_matrix(self, &cmplx, tqm);
+		
+		return *tqm;
+	}
+	
+	
+	/*
+		sub float scalar and matrix
 	*/
 	
 	%feature("autodoc", "__rsub__(float a)") __rsub__(float a);
@@ -860,7 +1019,7 @@ def Linspace(_s, _e, _n, endpoint = True):
 	}
 
 	/*
-	sub int scalar and matrix
+		sub int scalar and matrix
 	*/	
 	
 	%feature("autodoc", "__rsub__(int a)") __rsub__(int a);
@@ -2181,6 +2340,12 @@ def Linspace(_s, _e, _n, endpoint = True):
   {
     return self->vec_state[i];
   }
+
+  %feature("autodoc", "__getitem__(int i) -> Complex") __getitem__(int i);
+  Complex __getitem__(int i)
+  {
+	return self->vec_state[i];
+  }
   
   %feature("autodoc", "SetVecStateN(int i, float re, float im)") SetVecStateN(int i, float re, float im);
   void SetVecStateN(int i, float re, float im)
@@ -2482,7 +2647,7 @@ def SetMultistate(self, states):
   	qcs_qubit_arbitrary_one_qubit_gate(self, &gate, i);
   }
 
-  %feature("autodoc", "Arbitrary2QubitGate(int c11, int t, Matrix gate)") Arbitrary2QubitGate(int c1, int t, Matrix gate);
+  %feature("autodoc", "Arbitrary2QubitGate(int c1, int t, Matrix gate)") Arbitrary2QubitGate(int c1, int t, Matrix gate);
   void Arbitrary2QubitGate(int c1, int t, Matrix gate)
   {
   	qcs_qubit_arbitrary_2_qubit_gate_one_control(self, c1, t, &gate);
